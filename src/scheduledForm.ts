@@ -142,7 +142,7 @@ export function setupScheduledForm(client: Client) {
   // Cron expression: '0 18 * * *' = At 18:00 (6:00 PM) every day
   // Note: node-cron runs in the system's local timezone by default
   // To ensure it runs at 6:00 PM America/Chicago, we specify timezone
-  cron.schedule('0 18 * * *', () => {
+  cron.schedule('0 22 * * *', () => {
     console.log('⏰ Scheduled time reached, posting daily form...');
     postDailyForm(client);
   }, {
