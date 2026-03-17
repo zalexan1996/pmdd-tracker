@@ -23,7 +23,8 @@ const CSV_HEADERS = [
   { id: 'q11', title: 'Q11' },
   { id: 'q12', title: 'Q12' },
   { id: 'q13', title: 'Q13' },
-  { id: 'q14', title: 'Q14' }
+  { id: 'q14', title: 'Q14' },
+  { id: 'q15', title: 'Q15' }
 ];
 
 export interface SymptomRecord {
@@ -44,6 +45,7 @@ export interface SymptomRecord {
   q12: string;
   q13: string;
   q14: string;
+  q15: string;
 }
 
 /**
@@ -93,7 +95,7 @@ export async function saveSymptomData(
   date: string,
   responses: string[]
 ): Promise<void> {
-  if (responses.length !== 14) {
+  if (responses.length !== 15) {
     throw new Error('Expected 14 responses');
   }
   
@@ -115,7 +117,8 @@ export async function saveSymptomData(
     q11: responses[10],
     q12: responses[11],
     q13: responses[12],
-    q14: responses[13]
+    q14: responses[13],
+    q15: responses[14],
   };
   
   // Read existing records
@@ -164,7 +167,7 @@ export async function getUserCsvString(userId: string): Promise<string> {
   const filtered = records.filter(r => r.userId === userId);
   const header = CSV_HEADERS.map(h => h.title).join(',');
   const rows = filtered.map(r =>
-    [r.userId, r.username, r.date, r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8, r.q9, r.q10, r.q11, r.q12, r.q13, r.q14].join(',')
+    [r.userId, r.username, r.date, r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8, r.q9, r.q10, r.q11, r.q12, r.q13, r.q14, r.q15].join(',')
   );
   return [header, ...rows].join('\n');
 }
@@ -189,6 +192,5 @@ export function getCsvFilePath(): string {
 export async function getRecordCount(userId?: string): Promise<number> {
   const records = await readAllRecords();
   if (userId) return records.filter(r => r.userId === userId).length;
-  return records.length;
   return records.length;
 }
