@@ -49,16 +49,10 @@ async function handleSymptomSelection(interaction: StringSelectMenuInteraction) 
   const userResponses = pendingResponses.get(responseKey)!;
   userResponses.set(questionNumber, selectedValue);
   
-  // Count how many questions have been answered
-  const answeredCount = userResponses.size;
-  
-  // Acknowledge the selection
-  await interaction.reply({
-    content: `✅ Question ${questionNumber} recorded (${selectedValue}/6). Progress: ${answeredCount}/14 questions answered.`,
-    ephemeral: true
-  });
-  
   console.log(`📝 User ${interaction.user.tag} answered Q${questionNumber}: ${selectedValue}`);
+
+  // Acknowledge the interaction silently so Discord doesn't show "This interaction failed"
+  await interaction.deferUpdate();
 }
 
 /**
@@ -75,20 +69,20 @@ async function handleSubmit(interaction: ButtonInteraction) {
   const responseKey = `${userId}_${formDate}`;
   const userResponses = pendingResponses.get(responseKey);
   
-  // Validate that all 14 questions have been answered
-  if (!userResponses || userResponses.size !== 14) {
+  // Validate that all 15 questions have been answered
+  if (!userResponses || userResponses.size !== 15) {
     const answeredCount = userResponses ? userResponses.size : 0;
     const missingQuestions: number[] = [];
     
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 15; i++) {
       if (!userResponses || !userResponses.has(i)) {
         missingQuestions.push(i);
       }
     }
     
     await interaction.reply({
-      content: `❌ Please answer all 14 questions before submitting.\n` +
-        `You've answered ${answeredCount}/14 questions.\n` +
+      content: `❌ Please answer all 15 questions before submitting.\n` +
+        `You've answered ${answeredCount}/15 questions.\n` +
         `Missing questions: ${missingQuestions.join(', ')}`,
       ephemeral: true
     });
@@ -97,7 +91,7 @@ async function handleSubmit(interaction: ButtonInteraction) {
   
   // Convert responses to array format for CSV
   const responses: string[] = [];
-  for (let i = 1; i <= 14; i++) {
+  for (let i = 1; i <= 15; i++) {
     responses.push(userResponses.get(i)!);
   }
   

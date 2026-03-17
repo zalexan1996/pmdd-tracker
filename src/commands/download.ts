@@ -8,6 +8,11 @@ export const downloadCommand = {
     .setDescription('Downloads your symptom data as CSV and PDF'),
   
   async execute(interaction: ChatInputCommandInteraction) {
+    if (interaction.guildId !== process.env.GUILD_ID) {
+      await interaction.reply({ content: '❌ You do not have access to use this command here.', ephemeral: true });
+      return;
+    }
+
     try {
       // Defer reply since file operations might take a moment
       await interaction.deferReply();

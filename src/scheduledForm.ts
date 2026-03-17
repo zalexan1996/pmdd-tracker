@@ -1,7 +1,7 @@
-import { Client, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, TextChannel } from 'discord.js';
+import { Client, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, TextChannel, MessageFlags } from 'discord.js';
 import cron from 'node-cron';
 
-// The 14 PMDD symptom questions from the form
+// The 15 PMDD symptom questions from the form
 const questions = [
   "Felt depressed, sad, down, or blue or felt hopeless; or felt worthless or guilty",
   "Felt anxious, tense, keyed up or on edge",
@@ -16,7 +16,8 @@ const questions = [
   "Had breast tenderness, breast swelling, bloated sensation, weight gain, headache, joint or muscle pain, or other physical symptoms",
   "At work, school, home, or in daily routine, at least one of the problems noted above caused reduction of production of efficiency",
   "At least one of the problems noted above caused avoidance of or less participation in hobbies or social activities",
-  "At least one of the problems noted above interfered with relationships with others"
+  "At least one of the problems noted above interfered with relationships with others",
+  "Are you on your period?"
 ];
 
 // Create severity options for the select menus
@@ -29,6 +30,11 @@ const severityOptions = [
   { label: '6 - Extreme', value: '6' }
 ];
 
+const yesNoOptions = [
+  { label: 'Yes', value: 'yes' },
+  { label: 'No', value: 'no' }
+];
+
 /**
  * Creates the form message with all 14 select menus and a submit button
  * @param formDate The date this form is for (YYYY-MM-DD format)
@@ -39,25 +45,16 @@ export function createFormMessage(formDate: string) {
   // Create header message
   const header = `📋 **Daily PMDD Symptom Tracker - ${formDate}**\n\n` +
     `Please rate each symptom according to severity:\n` +
-    `**1** - Not at all | **2** - Minimal | **3** - Mild | **4** - Moderate | **5** - Severe | **6** - Extreme\n\n`;
+    `\t**1** - Not at all\n\t**2** - Minimal\n\t**3** - Mild\n\t**4** - Moderate\n\t**5** - Severe\n\t**6** - Extreme\n\n`;
   
-  // Create 14 select menus (one for each question)
-  // Note: Discord allows max 5 ActionRows per message, and each ActionRow can contain 1 select menu
-  // So we need to split into multiple messages OR use a modal. For now, we'll use 5 messages
-  // Actually, let's reconsider: we can send multiple messages or use a single message with buttons
-  // that open modals. For simplicity, let's create select menus in batches.
-  
-  // Discord limit: 5 ActionRows per message, 1 select menu per ActionRow
-  // We have 14 questions + 1 submit button = need at least 3 messages
-  
-  // For now, let's create all 14 select menus + button (we'll send in batches)
   const selectMenus: ActionRowBuilder<StringSelectMenuBuilder>[] = [];
   
   questions.forEach((question, index) => {
+    const options = index === questions.length - 1 ? yesNoOptions : severityOptions;
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId(`symptom_${index + 1}_${formDate}`)
-      .setPlaceholder(`Question ${index + 1}: Select severity`)
-      .addOptions(severityOptions);
+      .setPlaceholder(`Q${index + 1}: Provide a response`)
+      .addOptions(options);
     
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
     selectMenus.push(row);
@@ -104,30 +101,20 @@ export async function postDailyForm(client: Client) {
     
     const formData = createFormMessage(today);
     
-    // Send header message
-    await channel.send(formData.header);
-    
-    // Discord allows 5 ActionRows per message, so we'll send in batches
-    // Message 1: Questions 1-5
-    await channel.send({
-      content: `**Questions 1-5:**\n` +
-        formData.questions.slice(0, 5).map((q, i) => `${i + 1}. ${q}`).join('\n\n'),
-      components: formData.selectMenus.slice(0, 5)
-    });
-    
-    // Message 2: Questions 6-10
-    await channel.send({
-      content: `**Questions 6-10:**\n` +
-        formData.questions.slice(5, 10).map((q, i) => `${i + 6}. ${q}`).join('\n\n'),
-      components: formData.selectMenus.slice(5, 10)
-    });
-    
-    // Message 3: Questions 11-14 + Submit button
-    await channel.send({
-      content: `**Questions 11-14:**\n` +
-        formData.questions.slice(10, 14).map((q, i) => `${i + 11}. ${q}`).join('\n\n'),
-      components: [...formData.selectMenus.slice(10, 14), formData.submitRow]
-    });
+    // Send header message (silent)
+    await channel.send({ content: formData.header, flags: MessageFlags.SuppressNotifications });
+
+    // Send one message per question (silent), then submit message with notification
+    for (let i = 0; i < questions.length; i++) {
+      await channel.send({
+        content: `**Q${i + 1}:** ${questions[i]}`,
+        components: [formData.selectMenus[i]],
+        flags: MessageFlags.SuppressNotifications
+      });
+    }
+
+    // Final submit message — no SuppressNotifications so it triggers a notification
+    await channel.send({ components: [formData.submitRow] });
     
     console.log(`✅ Posted daily symptom form for ${today}`);
   } catch (error) {

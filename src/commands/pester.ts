@@ -7,6 +7,11 @@ export const pesterCommand = {
     .setDescription('Manually triggers the daily symptom form to be posted right now'),
   
   async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    if (interaction.guildId !== process.env.GUILD_ID) {
+      await interaction.reply({ content: '❌ You do not have access to use this command here.', ephemeral: true });
+      return;
+    }
+
     try {
       // Defer reply since posting might take a moment
       await interaction.deferReply();

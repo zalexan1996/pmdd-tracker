@@ -136,6 +136,18 @@ export async function saveSymptomData(
 }
 
 /**
+ * Clears all data for a specific user from the CSV file
+ */
+export async function clearUserData(userId: string): Promise<number> {
+  const records = await readAllRecords();
+  const remaining = records.filter(r => r.userId !== userId);
+  await writeAllRecords(remaining);
+  const removed = records.length - remaining.length;
+  console.log(`🗑️  Cleared ${removed} records for user ${userId}`);
+  return removed;
+}
+
+/**
  * Clears all data from the CSV file (keeps headers)
  */
 export async function clearAllData(): Promise<void> {
