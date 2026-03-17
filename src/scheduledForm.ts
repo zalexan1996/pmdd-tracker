@@ -36,7 +36,7 @@ const yesNoOptions = [
 ];
 
 /**
- * Creates the form message with all 14 select menus and a submit button
+ * Creates the form message with all 15 select menus and a submit button
  * @param formDate The date this form is for (YYYY-MM-DD format)
  */
 export function createFormMessage(formDate: string) {

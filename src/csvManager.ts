@@ -96,7 +96,7 @@ export async function saveSymptomData(
   responses: string[]
 ): Promise<void> {
   if (responses.length !== 15) {
-    throw new Error('Expected 14 responses');
+    throw new Error('Expected 15 responses');
   }
   
   // Create the new record
