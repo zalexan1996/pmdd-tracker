@@ -1,10 +1,13 @@
 import { REST, Routes } from 'discord.js';
-import { config } from 'dotenv';
-import { resetCommand } from './commands/reset.js';
-import { downloadCommand } from './commands/download.js';
-import { pesterCommand } from './commands/pester.js';
+import { resetCommand } from '../commands/reset.js';
+import { downloadCommand } from '../commands/download.js';
+import { pesterCommand } from '../commands/pester.js';
+import { ConfigurationManager } from '../core/configuration-manager.js';
+import { DiscordSettings } from '../discord-settings.js';
 
-config();
+const config = new ConfigurationManager();
+config.loadJson('appsettings.json');
+const settings = config.bind(DiscordSettings);
 
 const commands = [
   resetCommand.data.toJSON(),
@@ -12,15 +15,13 @@ const commands = [
   pesterCommand.data.toJSON()
 ];
 
-const token = process.env.DISCORD_TOKEN;
-const guildId = process.env.GUILD_ID;
-const applicationId = process.env.APPLICATION_ID;
+const { DiscordToken: token, GuildId: guildId, ApplicationId: applicationId } = settings;
 
 if (!token || !guildId || !applicationId) {
-  console.error('❌ Missing required environment variables:');
-  if (!token) console.error('  - DISCORD_TOKEN');
-  if (!guildId) console.error('  - GUILD_ID');
-  if (!applicationId) console.error('  - APPLICATION_ID');
+  console.error('❌ Missing required configuration:');
+  if (!token) console.error('  - DiscordToken');
+  if (!guildId) console.error('  - GuildId');
+  if (!applicationId) console.error('  - ApplicationId');
   process.exit(1);
 }
 

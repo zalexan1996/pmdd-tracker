@@ -1,29 +1,17 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, Client } from 'discord.js';
-import { postDailyForm } from '../scheduledForm.js';
+import { ChatInputCommandInteraction, Client, SlashCommandBuilder } from 'discord.js';
+import { CommandBase } from './shared/commandBase.js';
+import { DiscordSettings } from '../discord-settings.js';
+import { postDailyForm } from '../form-interaction/services/scheduledForm.js';
 
-export const pesterCommand = {
-  data: new SlashCommandBuilder()
+class PesterCommand extends CommandBase {
+  data = new SlashCommandBuilder()
     .setName('pester')
-    .setDescription('Manually triggers the daily symptom form to be posted right now'),
-  
-  async execute(interaction: ChatInputCommandInteraction, client: Client) {
-    if (interaction.guildId !== process.env.GUILD_ID) {
-      await interaction.reply({ content: '❌ You do not have access to use this command here.', ephemeral: true });
-      return;
-    }
+    .setDescription('Manually triggers the daily symptom form to be posted right now') as SlashCommandBuilder;
 
-    try {
-      // Defer reply since posting might take a moment
-      await interaction.deferReply();
-      
-      // Post the daily form
-      await postDailyForm(client);
-      
-      await interaction.editReply('✅ Daily symptom form has been posted to the channel!');
-      console.log(`📢 Form manually triggered by ${interaction.user.tag}`);
-    } catch (error) {
-      console.error('Error posting form via /pester:', error);
-      await interaction.editReply('❌ An error occurred while posting the form.');
-    }
+  protected async run(interaction: ChatInputCommandInteraction, client: Client, _settings: DiscordSettings): Promise<void> {
+    await postDailyForm(client);
+    await interaction.editReply('✅ Daily symptom form has been posted to the channel!');
   }
-};
+}
+
+export const pesterCommand = new PesterCommand();

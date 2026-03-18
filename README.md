@@ -31,21 +31,20 @@ cd pmdd-tracker
 npm install
 ```
 
-### 3. Configure Environment Variables
+### 3. Configure Application Settings
 
-Copy the example environment file and fill in your Discord credentials:
+Create an `appsettings.json` file in the project root with your Discord credentials:
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Discord bot credentials:
-
-```env
-DISCORD_TOKEN=your_bot_token_here
-GUILD_ID=guild_id
-CHANNEL_ID=channel_id
-APPLICATION_ID=application_id
+```json
+{
+  "DiscordSettings": {
+    "DiscordToken": "your_bot_token_here",
+    "GuildId": "guild_id",
+    "ChannelId": "channel_id",
+    "ApplicationId": "application_id",
+    "DbPath": "pmdd.db"
+  }
+}
 ```
 
 **How to get these values:**
@@ -161,21 +160,38 @@ The CSV file (`pmdd_data.csv`) has the following structure:
 ```
 pmdd-tracker/
 ├── src/
-│   ├── index.ts              # Main bot entry point
-│   ├── scheduledForm.ts      # Daily form posting logic
-│   ├── formHandler.ts        # Form interaction handling
-│   ├── csvManager.ts         # CSV read/write operations
-│   ├── deploy-commands.ts    # Command registration script
-│   └── commands/
-│       ├── reset.ts          # /reset command
-│       ├── download.ts       # /download command
-│       └── pester.ts         # /pester command
-├── dist/                     # Compiled JavaScript (generated)
-├── pmdd_data.csv            # Symptom data (generated)
+│   ├── discord-settings.ts       # DiscordSettings configuration class
+│   ├── core/
+│   │   ├── application.ts        # Application builder & startup
+│   │   └── configuration-manager.ts # JSON config loading & binding
+│   ├── entry/
+│   │   ├── index.ts              # Main bot entry point
+│   │   ├── deploy-commands.ts    # Command registration script
+│   │   └── seed-database.ts      # Database seeding script
+│   ├── commands/
+│   │   ├── shared/
+│   │   │   └── commandBase.ts    # Base command class
+│   │   ├── reset.ts              # /reset command
+│   │   ├── download.ts           # /download command
+│   │   └── pester.ts             # /pester command
+│   ├── domain/
+│   │   ├── models/               # Data models
+│   │   └── services/
+│   │       └── database-service.ts # SQLite database service
+│   ├── form-interaction/
+│   │   ├── constants.ts          # Questions & options
+│   │   └── services/
+│   │       ├── scheduledForm.ts  # Daily form posting logic
+│   │       └── formHandler.ts    # Form interaction handling
+│   └── reporting/
+│       └── services/
+│           ├── csvExporter.ts    # CSV export
+│           └── pdfExporter.ts    # PDF export
+├── dist/                         # Compiled JavaScript (generated)
+├── appsettings.json              # Application configuration (not in git)
 ├── package.json
 ├── tsconfig.json
-├── .env                     # Environment variables (not in git)
-└── .env.example             # Environment template
+└── README.md
 ```
 
 ## Troubleshooting
@@ -183,7 +199,7 @@ pmdd-tracker/
 ### Bot doesn't respond to slash commands
 - Make sure you ran `npm run deploy-commands` after setup
 - Verify the bot has proper permissions in your Discord server
-- Check that GUILD_ID matches your server
+- Check that `GuildId` in `appsettings.json` matches your server
 
 ### Scheduled form doesn't post at 6:00 PM
 - Verify the server timezone where the bot is running

@@ -1,62 +1,46 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder } from 'discord.js';
-import { csvFileExists, getRecordCount, getUserCsvString } from '../csvManager.js';
-import { generatePdf } from '../pdfGenerator.js';
+import { ChatInputCommandInteraction, Client, SlashCommandBuilder, AttachmentBuilder } from 'discord.js';
+import { CommandBase } from './shared/commandBase.js';
+import { DatabaseService } from '../domain/services/database-service.js';
+import { DiscordSettings } from '../discord-settings.js';
+import { exportCsv } from '../reporting/services/csvExporter.js';
+import { exportPdf } from '../reporting/services/pdfExporter.js';
 
-export const downloadCommand = {
-  data: new SlashCommandBuilder()
+class DownloadCommand extends CommandBase {
+  data = new SlashCommandBuilder()
     .setName('download')
-    .setDescription('Downloads your symptom data as CSV and PDF'),
-  
-  async execute(interaction: ChatInputCommandInteraction) {
-    if (interaction.guildId !== process.env.GUILD_ID) {
-      await interaction.reply({ content: '❌ You do not have access to use this command here.', ephemeral: true });
-      return;
-    }
+    .setDescription('Downloads your symptom data as CSV and PDF') as SlashCommandBuilder;
 
+  protected async run(interaction: ChatInputCommandInteraction, _client: Client, settings: DiscordSettings): Promise<void> {
+    const db = new DatabaseService(settings.DbPath);
     try {
-      // Defer reply since file operations might take a moment
-      await interaction.deferReply();
-      
-      // Check if CSV file exists
-      if (!csvFileExists()) {
-        await interaction.editReply('ℹ️ No data file exists yet. Nothing to download.');
-        return;
-      }
-      
       const userId = interaction.user.id;
-      
-      // Get record count for this user
-      const recordCount = await getRecordCount(userId);
-      
+      const recordCount = db.getProvidedAnswerCountForUser(userId);
+
       if (recordCount === 0) {
         await interaction.editReply('ℹ️ You have no recorded data yet. Nothing to download.');
         return;
       }
-      
-      // Create CSV attachment from filtered data
-      const csvString = await getUserCsvString(userId);
+
+      const csvString = exportCsv(db, userId);
       const csvAttachment = new AttachmentBuilder(Buffer.from(csvString, 'utf-8'), {
         name: 'pmdd_data.csv',
         description: 'PMDD Symptom Tracking Data'
       });
-      
-      // Generate PDF
-      const pdfBuffer = await generatePdf(userId);
+
+      const pdfBuffer = await exportPdf(db, userId);
       const pdfAttachment = new AttachmentBuilder(pdfBuffer, {
         name: 'pmdd_symptom_tracker.pdf',
         description: 'PMDD Symptom Tracker PDF Report'
       });
-      
+
       await interaction.editReply({
-        content: `📊 Here's your symptom data.\n` +
-          `Total records: ${recordCount}`,
+        content: `📊 Here's your symptom data.\nTotal records: ${recordCount}`,
         files: [csvAttachment, pdfAttachment]
       });
-      
-      console.log(`📥 CSV + PDF downloaded by ${interaction.user.tag} (${recordCount} records)`);
-    } catch (error) {
-      console.error('Error downloading data:', error);
-      await interaction.editReply('❌ An error occurred while preparing the download.');
+    } finally {
+      db.close();
     }
   }
-};
+}
+
+export const downloadCommand = new DownloadCommand();

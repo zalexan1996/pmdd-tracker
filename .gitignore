@@ -1,14 +1,15 @@
 # Dependencies
 node_modules/
 
-# Environment variables
-.env
+# Configuration
+appsettings.json
 
 # Build output
 dist/
 
 # Data files
 pmdd_data.csv
+*.db
 
 # IDE
 .vscode/
@@ -16,6 +17,7 @@ pmdd_data.csv
 *.swp
 *.swo
 *~
+*.bak
 
 # OS
 .DS_Store
