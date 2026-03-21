@@ -1,6 +1,7 @@
 import Sqlite3 from "better-sqlite3";
 import { Answer } from "../models/answer.js";
 import { Question } from "../models/question.js";
+import { QuestionSet } from "../models/questionSet.js";
 import { ProvidedAnswer } from "../models/providedAnswer.js";
 
 export interface ProvidedAnswerRow {
@@ -116,6 +117,40 @@ export class DatabaseService {
             `SELECT id FROM Answers WHERE questionId = ? AND value = ?`
         ).get(questionId, value) as { id: number } | undefined;
         return row?.id;
+    }
+
+    // ── Question Sets ────────────────────────────────────
+
+    getQuestionsForSet(questionSetId: number): Question[] {
+        return this.db.prepare(
+            `SELECT q.* FROM Questions q
+             JOIN QuestionSetQuestions qsq ON q.id = qsq.questionId
+             WHERE qsq.questionSetId = ?
+             ORDER BY q.id`
+        ).all(questionSetId) as Question[];
+    }
+
+    createQuestionSetTables(): void {
+        this.db.exec(QuestionSet.Create());
+        this.db.exec(QuestionSet.CreateJoin());
+    }
+
+    getQuestionSetCount(): number {
+        const row = this.db.prepare(`SELECT COUNT(*) as count FROM QuestionSets`).get() as { count: number };
+        return row.count;
+    }
+
+    insertQuestionSet(name: string): number {
+        const result = this.db.prepare(
+            `INSERT INTO QuestionSets (name) VALUES (?)`
+        ).run(name);
+        return result.lastInsertRowid as number;
+    }
+
+    linkQuestionToSet(questionSetId: number, questionId: number): void {
+        this.db.prepare(
+            `INSERT INTO QuestionSetQuestions (questionSetId, questionId) VALUES (?, ?)`
+        ).run(questionSetId, questionId);
     }
 
     close(): void {

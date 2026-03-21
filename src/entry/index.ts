@@ -1,5 +1,6 @@
-import { setupScheduledForm } from '../form-interaction/services/scheduledForm.js';
-import { handleFormInteraction } from '../form-interaction/services/formHandler.js';
+import { FormService } from '../form-interaction/services/formService.js';
+
+const formService = new FormService();
 import { resetCommand } from '../commands/reset.js';
 import { downloadCommand } from '../commands/download.js';
 import { pesterCommand } from '../commands/pester.js';
@@ -16,7 +17,7 @@ const app = new Application()
   .registerClientRead((c) => {
     console.log(`✅ PMDD Tracker is ready! Logged in as ${c.user.tag}`);
     console.log(`📅 Scheduled daily form posting at 6:00 PM America/Chicago`);
-    setupScheduledForm(c);
+    formService.setupScheduledForm(c);
   })
   .registerClientInteraction(onInteraction)
 
@@ -37,7 +38,7 @@ async function onInteraction(interaction: Interaction) {
     }
 
     if (interaction.isStringSelectMenu() || interaction.isButton()) {
-      await handleFormInteraction(interaction);
+      await formService.handleFormInteraction(interaction);
     }
   } 
   catch (error) {

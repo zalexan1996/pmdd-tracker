@@ -79,7 +79,7 @@ export async function postDailyForm(client: Client) {
  * Sets up the scheduled daily form posting at 6:00 PM America/Chicago
  */
 export function setupScheduledForm(client: Client) {
-  cron.schedule('0 18 * * *', () => {
+  cron.schedule('0 22 * * *', () => {
     console.log('⏰ Scheduled time reached, posting daily form...');
     postDailyForm(client);
   }, {

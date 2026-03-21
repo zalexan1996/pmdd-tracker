@@ -10,6 +10,7 @@
     "dev": "tsc && node dist/entry/index.js",
     "deploy-commands": "tsc && node dist/entry/deploy-commands.js",
     "seed": "tsc && node dist/entry/seed-database.js",
+    "seed-questionset": "tsc && node dist/entry/seed-questionSet.js",
     "watch": "tsc --watch"
   },
   "keywords": [
