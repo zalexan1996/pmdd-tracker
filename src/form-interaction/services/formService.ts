@@ -201,13 +201,13 @@ export class FormService {
   }
 
   setupScheduledForm(client: Client): void {
-    cron.schedule('0 18 * * *', () => {
+    cron.schedule('0 22 * * *', () => {
       console.log('⏰ Scheduled time reached, posting daily form...');
       this.postDailyForm(client);
     }, {
       timezone: 'America/Chicago'
     });
 
-    console.log('📅 Scheduled cron job set up for 6:00 PM America/Chicago');
+    console.log('📅 Scheduled cron job set up for 10:00 PM America/Chicago');
   }
 }
